@@ -58,6 +58,8 @@ void Parallel_LCD_print_text(uint8_t line, char* text) {
     size_t cyrillic_count = 0;
     
     size_t len = strlen(text);
+		if (len > 17) return;
+	
     int i = 0;
 	// запоминаем начала кириллических и латинских подстрок
     while (i < len) {
