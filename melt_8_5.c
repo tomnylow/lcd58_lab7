@@ -27,45 +27,110 @@ void LCD(uint8_t val, uint8_t cmd)
 	DELAY_MS(1);
 	}
 
-void Parallel_LCD_print_text(uint8_t line, char* text, uint8_t cell)
+void old_print_text(uint8_t line, char* text, uint8_t cell)
 {
-	uint8_t nBytes;
-	nBytes = strlen(text);
-	if (nBytes>80) return;
-	if(line == FIRST_LINE)
-	{
-	LCD(0x80 + cell, 0); // для латиницы полное соотв с ascii нахуя +80
-	}
-	else if (line == SECOND_LINE)
-	{
-	LCD(0xC0 + cell, 0);
-	}
-	DELAY_US(50);
-	for(uint8_t j=0; j < nBytes; j++)
-	{
-	LCD(text[j], 1);
-	DELAY_US(50);
-	}
-	LCD(0x38, 0);
-	DELAY_US(50);
+uint8_t nBytes;
+if (!text) return;
+nBytes = strlen(text);
+if (nBytes>80) return;
+if(line == FIRST_LINE)
+{
+LCD(0x80 + cell, 0);
+}
+else if (line == SECOND_LINE)
+{
+LCD(0xC0 + cell, 0);
+}
+DELAY_US(50);
+for(uint8_t j=0; j < nBytes; j++)
+{
+LCD(text[j], 1);
+DELAY_US(50);
+};
+LCD(0x38, 0);
+DELAY_US(50);
+}
+void Parallel_LCD_print_text(uint8_t line, char* text) {
+    uint8_t latin_start_positions[16];  // Максимальное количество подстрок
+    uint8_t cyrillic_start_positions[16];
+    
+    size_t latin_count = 0;
+    size_t cyrillic_count = 0;
+    
+    size_t len = strlen(text);
+    int i = 0;
+	// запоминаем начала кириллических и латинских подстрок
+    while (i < len) {
+        if (text[i] < 128) {
+            latin_start_positions[latin_count] = i;
+            latin_count++;
+            while (i < len && text[i] < 128) {
+                i++;
+            }
+        } else {
+            cyrillic_start_positions[cyrillic_count] = i;
+            cyrillic_count++;
+            while (i < len && text[i] >= 128) {
+                i++;
+            }
+        }
+    }
+    
+    if (line == FIRST_LINE) {
+				LCD(0xC, 0); //смена на первую кодовую страницу
+        for (size_t j = 0; j < latin_count; j++) {
+            LCD(0x80 + latin_start_positions[j], 0);
+            for (size_t k = latin_start_positions[j]; k < len && text[k] < 128; k++) {
+                LCD(convert_1251_to_melt(text[k]), 1);
+            }
+        }
+				CLEAR_LCD_MELT_8BIT();
+				for (size_t j = 0; j < cyrillic_count; j++) {
+						LCD(0xD, 0); // вторая страница
+            LCD(0x80 + cyrillic_start_positions[j], 0);
+            for (size_t k = cyrillic_start_positions[j]; k < len && text[k] >= 128; k++) {
+                LCD(convert_1251_to_melt(text[k]), 1);
+            }
+        }
+    }
+
+    if (line == SECOND_LINE) {
+				LCD(0xC, 0); //смена на первую кодовую страницу
+        for (size_t j = 0; j < latin_count; j++) {
+            LCD(0xC0 + latin_start_positions[j], 0);
+            for (size_t k = latin_start_positions[j]; k < len && text[k] < 128; k++) {
+                LCD(convert_1251_to_melt(text[k]), 1);
+            }
+        }
+				CLEAR_LCD_MELT_8BIT();
+				for (size_t j = 0; j < cyrillic_count; j++) {
+						LCD(0xD, 0); // вторая страница
+            LCD(0xC0 + cyrillic_start_positions[j], 0);
+            for (size_t k = cyrillic_start_positions[j]; k < len && text[k] >= 128; k++) {
+                LCD(convert_1251_to_melt(text[k]), 1);
+            }
+        }
+    }
 }
 
-inline void CLEAR_LCD_MELT_8BIT(void)
+
+void CLEAR_LCD_MELT_8BIT(void)
 {
 LCD(0x01, 0);
 }
 
-void CHANGE_LCD_PAGE(void){
-	static uint8_t currentPage = 0xC;
-
-    // Переключение кодовой страницы
-    if (currentPage == 0xC) {
-        currentPage = 0xD;
-    } else {
-        currentPage = 0xC;
-    }
-	LCD(currentPage, 0);
-}
 void create_custom_symbol(char* sym){
 	
+}
+uint8_t convert_1251_to_melt(unsigned char symbol) {
+    if (symbol < 192) {
+        return symbol;
+    } else {
+
+// АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ
+// ABCDEFGHIJKLMNOPQRSTUVWXYZ
+        unsigned char mask[] = {65, 189, 66, 190, 191, 69, 192, 193, 194, 195, 196, 197, 77, 
+        72, 79, 134, 80, 67, 84, 199, 200, 88, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210}; 
+        return mask[symbol - 192];
+    }
 }

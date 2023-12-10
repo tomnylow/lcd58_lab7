@@ -9,8 +9,10 @@
 #include <string.h>
 
 void LCD(uint8_t val, uint8_t cmd);
-void Parallel_LCD_print_text(uint8_t line, char* text, uint8_t cell);
-inline void CLEAR_LCD_MELT_8BIT(void);
+void Parallel_LCD_print_text(uint8_t line, char* text);
+void CLEAR_LCD_MELT_8BIT(void);
 void CHANGE_LCD_PAGE(void);
 void create_custom_symbol(char* sym);
+uint8_t convert_1251_to_melt(unsigned char sym);
+void old_print_text(uint8_t line, char* text, uint8_t cell);
 #endif

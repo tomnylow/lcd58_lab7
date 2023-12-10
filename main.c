@@ -1,10 +1,12 @@
 #include "hw init.h"
 #include "melt_8_5.h"
 
-void main(void) {
+int main(void) {
 	Ports_Init();
 	LCD_Init();
-	char str[] = "Привет, мир!";
-	Parallel_LCD_print_text(FIRST_LINE, str, 0);
-	
+	char str[] = "DRPQ 12 БГД !Ш?";
+	while(1){
+	Parallel_LCD_print_text(FIRST_LINE, str);
+	}
+	return 0;
 }
