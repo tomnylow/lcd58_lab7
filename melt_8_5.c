@@ -113,6 +113,8 @@ void Parallel_LCD_print_text(uint8_t line, char* text) {
             }
         }
     }
+LCD(0x38, 0);
+DELAY_US(50);
 }
 
 
@@ -121,8 +123,19 @@ void CLEAR_LCD_MELT_8BIT(void)
 LCD(0x01, 0);
 }
 
-void create_custom_symbol(char* sym){
-	
+void create_custom_symbol(uint8_t code, const char* symbol)
+{
+	uint8_t adr;
+	for(uint8_t j=0; j < 8; j++){
+		adr = 0x40 + j + (code << 3); 
+		LCD(0x38, 0); DELAY_US(50);
+		LCD(adr, 0); DELAY_US(50);
+		LCD(0x3C, 0); DELAY_US(50);
+		LCD(0x80, 0); DELAY_US(50);
+		LCD(symbol[j], 0); DELAY_US(50);  
+		LCD(0x38, 0); DELAY_US(50);
+		 
+	}; 
 }
 uint8_t convert_1251_to_melt(unsigned char symbol) {
     if (symbol < 192) {
